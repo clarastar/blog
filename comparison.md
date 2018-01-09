@@ -8,6 +8,10 @@ restangular则是需要引入才可以，处理负责数据结构的api请求，
 #git base testing 4
 #git base testing 5
 
+#测试git rebase
+
+#测试git rebase -2
+
 #Mongoose 的findOneAndUpdate create 
 在添加新的project的时候用的Model.create(project,cb);
 在修改原有的project，保存的时候用的Model.findOneAndUpdate(query,data,options,cb);
