@@ -10,6 +10,98 @@
         <li>问题1</li>
         <li>问题2</li>
     </ul>
+
+    <div class="modal-container" ng-class="{'edit-case-container':vm.action==='edit'}">
+        <div class="modal-header">
+            <h4 class="text-center">
+                <span ng-if="vm.action==='add'">添加病例</span>
+                <span ng-if="vm.action==='edit'">编辑病例</span>
+            </h4>
+        </div>
+
+        <ng-form name="updateCaseForm" ng-if="!vm.isEditingReason">
+            <div class="modal-body case-container">
+                <ul class="case-items list-unstyled">
+                    <li>
+                        <span>研究对象编号:<i class="required-msg" ng-show="updateCaseForm.uid.$error.required">*</i></span>
+                        <input ng-model="vm.updateCase.uid" name="uid" ng-pattern="vm.caseUidRegex" type="text" required ng-blur="vm.validateUid(vm.updateCase)" ng-mouseleave="vm.validateUid(vm.updateCase)">
+                        <p class="error-msg" ng-show="updateCaseForm.uid.$error.pattern">{{vm.regUidMsg}}</p>
+                        <p class="error-msg" ng-show="vm.resultUidMsg">{{vm.resultUidMsg}}</p>
+                    </li>
+                    <li>
+                        <span>姓名:<i class="required-msg" ng-show="updateCaseForm.sname.$error.required">*</i></span>
+                        <input ng-model="vm.updateCase.subject_name" type="text" name="sname" required>
+                    </li>
+                    <li>
+                        <span>证件类型:<i class="required-msg" ng-show="updateCaseForm.stype.$error.required">*</i></span>
+                        <select ng-model="vm.updateCase.subject_id_type" name="stype" required ng-options="idType.value as idType.name for idType in vm.idTypeSelections" ng-change="vm.changeIdType()"></select>
+                    </li>
+                    <li>
+                        <span>证件号码:<i class="required-msg" ng-show="updateCaseForm.sid.$error.required">*</i></span>
+                        <input ng-model="vm.updateCase.subject_id_code" type="text" name="sid" ng-pattern="vm.idCodeReg" required ng-blur="vm.validateIdCode(vm.updateCase)" ng-mouseleave="vm.validateIdCode(vm.updateCase)">
+                        <p class="error-msg" ng-show="updateCaseForm.sid.$error.pattern">{{vm.regIdCodeMsg}}</p>
+                        <p class="error-msg" ng-show="vm.resultIdCodeMsg">{{vm.resultIdCodeMsg}}</p>
+                    </li>
+                    <li>
+                        <span>中心:<i class="required-msg" ng-show="updateCaseForm.siteid.$error.required">*</i></span>
+                        <select ng-model="vm.updateCase.site_id" name="siteid" ng-options="userSite.id as userSite.org.name for userSite in vm.userSites" required></select>
+                    </li>
+                    <li ng-if="!vm.study.randomized">
+                        <span>分组:<i class="required-msg" ng-show="updateCaseForm.groupid.$error.required">*</i></span>
+                        <select ng-model="vm.updateCase.group_id" name="groupid" required ng-options="group.id as group.name for group in vm.groups" ng-disabled="vm.action==='edit'"></select>
+                    </li>
+                    <li>
+                        <span>入组时间:<i class="required-msg" ng-show="updateCaseForm.grouptime.$error.required">*</i></span><label for="" class="date">
+                        <input id="add-case-datepicker" class="datepicker" name="grouptime" required ng-model="vm.date" ng-change="vm.changeDate()"></label>
+                        <label for="" class="time">
+                            <input id="add-case-timepicker" class="timepicker" ng-model="vm.time" ng-change="vm.changeDate()"></label>
+                        <script>
+                            $('#add-case-datepicker').pickadate({
+                                selectYears: 140,
+                                min: [1897, 1, 1],
+                                max: [2037, 1, 1],
+                                selectMonths: true,
+                                format: 'yyyy-mm-dd',
+                                closeOnSelect: true, //pickadate.js bug here! remember to add "for" for <label> outside <input>
+                                monthsFull: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+                                monthsShort: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+                                weekdaysShort: ['日', '一', '二', '三', '四', '五', '六'],
+                                today: '今天',
+                                clear: '清除'
+                            });
+                            $('#add-case-timepicker').pickatime({
+                                format: 'HH:i',
+                                formatSubmit: 'HH:ii',
+                                closeOnSelect: true,
+                                interval: 60,
+                            });
+                        </script>
+                    </li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <input type="button" value="取消" data-dismiss="modal" ng-click="vm.cancel()" class="modal-cancel-btn">
+                <input ng-if="vm.action==='add'" type="button" value="添加" data-dismiss="modal" ng-click="vm.confirm(vm.updateCase)" class="modal-confirm-btn" ng-disabled="!(updateCaseForm.$valid&&vm.isIdCodeValidated && vm.isUidValidated) ">
+                <input ng-if="vm.action==='edit'" type="button" value="保存" data-dismiss="modal" ng-click="vm.editCase(vm.updateCase)" class="modal-confirm-btn" ng-disabled="!updateCaseForm.$valid">
+            </div>
+        </ng-form>
+
+        <ng-form name="editCaseReasonForm" ng-if="vm.action==='edit'&&vm.isEditingReason">
+            <div class="modal-body">
+                <div class="reason-box">
+                    <p>
+                        根据研究方案规定，录入员不允许随意修改病例基本信息。请您详细说明修改原因，以便项目管理员审查.<i class="required-msg" ng-show="editCaseReasonForm.editReason.$error.required">*</i>
+                    </p>
+                    <textarea ng-model="vm.editCaseRecords.edit_reason" name="editReason" required></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <input type="button" value="返回修改" data-dismiss="modal" ng-click="vm.backToEdit()" class="modal-cancel-btn">
+                <input type="button" value="保存" data-dismiss="modal" ng-click="vm.confirmEdit(vm.updateCase)" class="modal-confirm-btn" ng-disabled="!editCaseReasonForm.$valid">
+            </div>
+        </ng-form>
+    </div>
 </div>
 </body>
 </html>
